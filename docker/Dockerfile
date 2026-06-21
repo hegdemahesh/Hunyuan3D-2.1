@@ -191,10 +191,18 @@ RUN rm -f /workspace/*.zip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Set default command
-WORKDIR /workspace/Hunyuan3D-2.1
-RUN mkdir -p gradio_cache
+# Create RunPod volume directory structure
+RUN mkdir -p /runpod-volume && chmod 777 /runpod-volume
 
-# Enable configurable port (default to 8081, matching VM manager and API endpoint routing)
+# Copy and set up the entrypoint script
+COPY docker/entrypoint.sh /workspace/entrypoint.sh
+RUN chmod +x /workspace/entrypoint.sh
+
+# Set working directory to the repo
+WORKDIR /workspace/Hunyuan3D-2.1
+
+# Enable configurable port (default to 8081)
 ENV PORT=8081
-CMD python api_server.py --host 0.0.0.0 --port $PORT
+
+ENTRYPOINT ["/workspace/entrypoint.sh"]
+CMD ["/bin/bash", "-c", "python api_server.py --host 0.0.0.0 --port $PORT"]
