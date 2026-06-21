@@ -60,8 +60,12 @@ RUN pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.
 # Copy local Hunyuan3D-2.1 repository files instead of cloning upstream
 COPY . /workspace/Hunyuan3D-2.1
 
-# Install Python dependencies from requirements.txt without caching wheels
-RUN pip install --no-cache-dir -r /workspace/Hunyuan3D-2.1/requirements.txt
+# Remove Tencent and Aliyun mirrors from requirements.txt to avoid connectivity timeouts in GitHub Actions
+RUN sed -i '/mirrors.cloud.tencent.com/d' /workspace/Hunyuan3D-2.1/requirements.txt && \
+    sed -i '/mirrors.aliyun.com/d' /workspace/Hunyuan3D-2.1/requirements.txt
+
+# Install Python dependencies from requirements.txt without caching wheels, adding Blender's index to resolve bpy
+RUN pip install --no-cache-dir --extra-index-url https://download.blender.org/pypi/simple/ -r /workspace/Hunyuan3D-2.1/requirements.txt
 
 # Install custom_rasterizer
 RUN cd /workspace/Hunyuan3D-2.1/hy3dpaint/custom_rasterizer && \
