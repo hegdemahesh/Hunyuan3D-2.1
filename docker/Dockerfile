@@ -60,12 +60,90 @@ RUN pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.
 # Copy local Hunyuan3D-2.1 repository files instead of cloning upstream
 COPY . /workspace/Hunyuan3D-2.1
 
-# Remove Tencent and Aliyun mirrors from requirements.txt to avoid connectivity timeouts in GitHub Actions
-RUN sed -i '/mirrors.cloud.tencent.com/d' /workspace/Hunyuan3D-2.1/requirements.txt && \
-    sed -i '/mirrors.aliyun.com/d' /workspace/Hunyuan3D-2.1/requirements.txt
+# -----------------------------------------------------------------------
+# Install Python dependencies in targeted groups to avoid:
+#   - Chinese mirror connectivity timeouts (Tencent/Aliyun)
+#   - Expired nightly packages (tb_nightly pinned to old date)
+#   - bpy missing from standard PyPI (needs Blender archive)
+#   - deepspeed needing special build flags in CI
+# -----------------------------------------------------------------------
 
-# Install Python dependencies from requirements.txt without caching wheels, adding Blender's index to resolve bpy
-RUN pip install --no-cache-dir --extra-index-url https://download.blender.org/pypi/simple/ -r /workspace/Hunyuan3D-2.1/requirements.txt
+# 1. Core ML/Deep Learning (torch already installed above)
+RUN pip install --no-cache-dir \
+    transformers==4.46.0 \
+    diffusers==0.30.0 \
+    accelerate==1.1.1 \
+    pytorch-lightning==1.9.5 \
+    huggingface-hub==0.30.2 \
+    safetensors==0.4.4
+
+# 2. Scientific Computing
+RUN pip install --no-cache-dir \
+    "numpy>=1.24.4,<2.0" \
+    scipy==1.14.1 \
+    einops==0.8.0 \
+    pandas==2.2.2
+
+# 3. Build tools
+RUN pip install --no-cache-dir \
+    ninja==1.11.1.1 \
+    pybind11==2.13.4
+
+# 4. Computer Vision & Image Processing (basicsr before realesrgan)
+RUN pip install --no-cache-dir \
+    opencv-python==4.10.0.84 \
+    imageio==2.36.0 \
+    scikit-image==0.24.0 \
+    rembg==2.0.65 \
+    basicsr==1.4.2 \
+    realesrgan==0.3.0 \
+    tensorboard
+
+# 5. 3D Mesh Processing
+RUN pip install --no-cache-dir \
+    trimesh==4.4.7 \
+    pymeshlab==2022.2.post3 \
+    pygltflib==1.16.3 \
+    xatlas==0.0.9 \
+    open3d==0.18.0
+
+# 6. Config & Utilities
+RUN pip install --no-cache-dir \
+    omegaconf==2.3.0 \
+    pyyaml==6.0.2 \
+    configargparse==1.7 \
+    tqdm==4.66.5 \
+    psutil==6.0.0
+
+# 7. Web Framework
+RUN pip install --no-cache-dir \
+    gradio==5.33.0 \
+    fastapi==0.115.12 \
+    uvicorn==0.34.3
+
+# 8. GPU extras
+RUN pip install --no-cache-dir \
+    cupy-cuda12x==13.4.1 \
+    onnxruntime==1.16.3 \
+    torchmetrics==1.6.0 \
+    pydantic==2.10.6
+
+# 9. Blender Python module — NOT on standard PyPI.
+# Blender's archive is not a proper PEP 503 simple index so --extra-index-url fails.
+# Download the exact wheel for cp310 / manylinux directly and install from file.
+RUN wget -q -O /tmp/bpy-4.0.0-cp310-manylinux.whl \
+    "https://download.blender.org/pypi/bpy/bpy-4.0.0-cp310-cp310-manylinux_2_28_x86_64.whl" && \
+    pip install --no-cache-dir /tmp/bpy-4.0.0-cp310-manylinux.whl && \
+    rm /tmp/bpy-4.0.0-cp310-manylinux.whl
+
+# 10. Misc ML extras (unversioned; no-deps to avoid conflicts)
+RUN pip install --no-cache-dir \
+    timm \
+    torchdiffeq \
+    pythreejs
+
+# 11. DeepSpeed — disable custom kernels during CI build to avoid CUDA compile failures
+RUN DS_BUILD_OPS=0 pip install --no-cache-dir deepspeed
 
 # Install custom_rasterizer
 RUN cd /workspace/Hunyuan3D-2.1/hy3dpaint/custom_rasterizer && \
