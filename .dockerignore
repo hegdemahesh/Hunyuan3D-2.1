@@ -1,0 +1,17 @@
+.git
+.github
+*.glb
+*.obj
+*.png
+*.jpg
+*.pth
+*.zip
+gradio_cache/
+outputs/
+hy3dpaint/ckpt/
+hy3dshape/output_folder/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/

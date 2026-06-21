@@ -49,19 +49,19 @@ ENV PATH="/workspace/miniconda3/envs/hunyuan3d21/bin:${PATH}"
 # Set conda to always auto-approve
 RUN conda config --set always_yes true
 
-RUN conda install Ninja
-RUN conda install cuda -c nvidia/label/cuda-12.4.1 -y
+# Install Ninja and update libstdcxx-ng (cleaning conda cache to save space)
+RUN conda install Ninja && \
+    conda install -c conda-forge libstdcxx-ng -y && \
+    conda clean -ya
 
-# Update libstdcxx-ng to fix compatibility issues (auto-confirm)
-RUN conda install -c conda-forge libstdcxx-ng -y
+# Install PyTorch and dependencies without caching wheels
+RUN pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
 
-RUN pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+# Copy local Hunyuan3D-2.1 repository files instead of cloning upstream
+COPY . /workspace/Hunyuan3D-2.1
 
-# Clone Hunyuan3D-2.1 repository
-RUN git clone https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1.git
-
-# Install Python dependencies from modified requirements.txt
-RUN pip install -r Hunyuan3D-2.1/requirements.txt
+# Install Python dependencies from requirements.txt without caching wheels
+RUN pip install --no-cache-dir -r /workspace/Hunyuan3D-2.1/requirements.txt
 
 # Install custom_rasterizer
 RUN cd /workspace/Hunyuan3D-2.1/hy3dpaint/custom_rasterizer && \
@@ -100,7 +100,8 @@ RUN apt-get install -y libxi6 libgconf-2-4 libxkbcommon-x11-0 libsm6 libxext6 li
 RUN echo "conda activate hunyuan3d21" >> ~/.bashrc
 SHELL ["/bin/bash", "--login", "-c"]
 
-#exposing 7860 port
+# Expose ports: 8081 for Fast API Server and 7860 for Gradio Web UI
+EXPOSE 8081
 EXPOSE 7860
 
 # Cleanup
@@ -110,5 +111,8 @@ RUN rm -f /workspace/*.zip && \
 
 # Set default command
 WORKDIR /workspace/Hunyuan3D-2.1
-RUN mkdir gradio_cache
-CMD ["python", "api_server.py"]
+RUN mkdir -p gradio_cache
+
+# Enable configurable port (default to 8081, matching VM manager and API endpoint routing)
+ENV PORT=8081
+CMD python api_server.py --host 0.0.0.0 --port $PORT

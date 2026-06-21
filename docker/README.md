@@ -1,33 +1,40 @@
 # Docker setup
 
-This docker setup is tested on Windows 10.
+This Docker setup is tested on Windows 10/11 and Linux environments.
 
-make sure you are under this directory yourworkspace/Hunyuan3D-2.1/docker
+Make sure you are in the repository root directory (`yourworkspace/Hunyuan3D-2.1`).
 
 Build docker image:
 
-```
-docker build -t hunyuan3d21:latest .
-```
-
-Run docker image at the first time:
-
-```
-docker run -it --name hy3d21 -p 7860:7860 --gpus all hunyuan3d21 python gradio_app.py --port 7860
+```bash
+docker build -t hunyuan3d21:latest -f docker/Dockerfile .
 ```
 
-After first time:
-```
-docker start -a hy3d21
+Run Docker container for the API server (exposing port 8081 for integration, matching default configuration):
+
+```bash
+docker run -d --name hy3d21 -p 8081:8081 --gpus all hunyuan3d21
 ```
 
-Stop the container:
+Or run the Gradio UI demo (exposing port 7860):
+
+```bash
+docker run -it --name hy3d21-ui -p 7860:7860 --gpus all hunyuan3d21 python gradio_app.py --port 7860 --host 0.0.0.0
 ```
+
+After the first run, you can manage the container:
+
+```bash
+# Start container
+docker start hy3d21
+
+# Stop container
 docker stop hy3d21
+
+# View logs
+docker logs -f hy3d21
 ```
 
-You can find the demo link showing in terminal, such as `http://0.0.0.0:7860`, then you cuold access `http://127.0.0.1:7860` from your host machine.
-
-Some notes:
-1. the total built time might take more than one hour.
-2. the total size of the built image will be more than 70GB.
+Notes:
+1. The compilation of custom rasterizers and CUDA kernels during build takes time (up to 30-45 minutes depending on processor/GPU).
+2. The final Docker image is optimized (conda and pip caches are cleaned, and duplicate CUDA toolkits are removed) to fit easily in standard disk budgets.
