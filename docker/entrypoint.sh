@@ -7,16 +7,18 @@ if [ -d "/runpod-volume" ]; then
     export TORCH_HOME="/runpod-volume/torch"
     export GRADIO_CACHE_DIR="/runpod-volume/gradio_cache"
     export GRADIO_TEMP_DIR="/runpod-volume/tmp"
+    export HY3DGEN_MODELS="/runpod-volume/hy3dgen"
 else
     echo "No RunPod network volume detected. Using default container paths..."
     export HF_HOME="/workspace/huggingface"
     export TORCH_HOME="/workspace/torch"
     export GRADIO_CACHE_DIR="/workspace/gradio_cache"
     export GRADIO_TEMP_DIR="/workspace/tmp"
+    export HY3DGEN_MODELS="/workspace/hy3dgen"
 fi
 
 # Ensure all cache and temp directories exist
-mkdir -p "$HF_HOME" "$TORCH_HOME" "$GRADIO_CACHE_DIR" "$GRADIO_TEMP_DIR"
+mkdir -p "$HF_HOME" "$TORCH_HOME" "$GRADIO_CACHE_DIR" "$GRADIO_TEMP_DIR" "$HY3DGEN_MODELS"
 
 # Execute the main command (e.g., api_server.py) passed from Docker's CMD
 exec "$@"

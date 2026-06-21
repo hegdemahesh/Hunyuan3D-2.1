@@ -126,7 +126,8 @@ RUN pip install --no-cache-dir \
     cupy-cuda12x==13.4.1 \
     onnxruntime==1.16.3 \
     torchmetrics==1.6.0 \
-    pydantic==2.10.6
+    pydantic==2.10.6 \
+    setuptools
 
 # 9. Blender Python module — NOT on standard PyPI.
 # Blender's archive is not a proper PEP 503 simple index so --extra-index-url fails.
