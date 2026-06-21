@@ -131,10 +131,10 @@ RUN pip install --no-cache-dir \
 # 9. Blender Python module — NOT on standard PyPI.
 # Blender's archive is not a proper PEP 503 simple index so --extra-index-url fails.
 # Download the exact wheel for cp310 / manylinux directly and install from file.
-RUN wget -q -O /tmp/bpy-4.0.0-cp310-manylinux.whl \
+RUN wget -q -O /tmp/bpy-4.0.0-cp310-cp310-manylinux_2_28_x86_64.whl \
     "https://download.blender.org/pypi/bpy/bpy-4.0.0-cp310-cp310-manylinux_2_28_x86_64.whl" && \
-    pip install --no-cache-dir /tmp/bpy-4.0.0-cp310-manylinux.whl && \
-    rm /tmp/bpy-4.0.0-cp310-manylinux.whl
+    pip install --no-cache-dir /tmp/bpy-4.0.0-cp310-cp310-manylinux_2_28_x86_64.whl && \
+    rm /tmp/bpy-4.0.0-cp310-cp310-manylinux_2_28_x86_64.whl
 
 # 10. Misc ML extras (unversioned; no-deps to avoid conflicts)
 RUN pip install --no-cache-dir \
