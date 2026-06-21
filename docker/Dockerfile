@@ -187,6 +187,9 @@ SHELL ["/bin/bash", "--login", "-c"]
 EXPOSE 8081
 EXPOSE 7860
 
+# Force NumPy to 1.x to avoid ABI mismatch errors with onnxruntime and other libraries
+RUN pip install --no-cache-dir "numpy<2.0"
+
 # Cleanup
 RUN rm -f /workspace/*.zip && \
     apt-get clean && \
@@ -201,6 +204,7 @@ RUN chmod +x /workspace/entrypoint.sh
 
 # Set working directory to the repo
 WORKDIR /workspace/Hunyuan3D-2.1
+RUN mkdir -p gradio_cache
 
 # Enable configurable port (default to 8081)
 ENV PORT=8081
