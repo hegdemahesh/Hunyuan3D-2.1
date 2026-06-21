@@ -154,12 +154,19 @@ class ModelWorker:
         """
         start_time = time.time()
         logger.info(f"Generating 3D model for uid: {uid}")
-        # Handle input image
-        if 'image' in params:
+        # Handle input image (base64 or URL)
+        if 'image' in params and params.get("image"):
             image = params["image"]
             image = load_image_from_base64(image)
+        elif 'image_url' in params and params.get("image_url"):
+            import requests
+            from io import BytesIO
+            logger.info(f"Downloading image from URL: {params['image_url']}")
+            response = requests.get(params["image_url"], timeout=30)
+            response.raise_for_status()
+            image = Image.open(BytesIO(response.content))
         else:
-            raise ValueError("No input image provided")
+            raise ValueError("No input image or image_url provided")
 
         # Convert to RGBA and remove background if needed
         image = image.convert("RGBA")
