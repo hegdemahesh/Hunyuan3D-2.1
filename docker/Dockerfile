@@ -127,7 +127,7 @@ RUN pip install --no-cache-dir \
     onnxruntime==1.16.3 \
     torchmetrics==1.6.0 \
     pydantic==2.10.6 \
-    setuptools
+    "setuptools<70"
 
 # 9. Blender Python module — NOT on standard PyPI.
 # Blender's archive is not a proper PEP 503 simple index so --extra-index-url fails.
@@ -187,8 +187,8 @@ SHELL ["/bin/bash", "--login", "-c"]
 EXPOSE 8081
 EXPOSE 7860
 
-# Force NumPy to 1.x to avoid ABI mismatch errors with onnxruntime and other libraries
-RUN pip install --no-cache-dir "numpy<2.0"
+# Force NumPy and setuptools versions to avoid runtime compatibility issues
+RUN pip install --no-cache-dir "numpy<2.0" "setuptools<70"
 
 # Cleanup
 RUN rm -f /workspace/*.zip && \
