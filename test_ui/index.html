@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hunyuan3D Backend Tester</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Import Google Model Viewer Component -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Background Glow Elements -->
+    <div class="glow-bg">
+        <div class="glow-sphere glow-1"></div>
+        <div class="glow-sphere glow-2"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <i class="fa-solid fa-cube logo-icon"></i>
+                <div class="logo-text">
+                    <h1>Hunyuan3D <span class="gradient-text">Tester</span></h1>
+                    <span class="version-badge">v2.1 API Client</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="https://github.com/Tencent/Hunyuan3D-1" target="_blank" class="github-link">
+                    <i class="fa-brands fa-github"></i> Docs
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="app-main">
+            <!-- Left Panel: Configurations and Inputs -->
+            <section class="panel-left">
+                <!-- Card 1: Backend Selector -->
+                <div class="card glass-card">
+                    <h2 class="card-title"><i class="fa-solid fa-server icon-purple"></i> Backend Server Configuration</h2>
+                    
+                    <div class="backend-tabs">
+                        <button type="button" class="tab-btn active" id="tab-local" onclick="switchBackend('local')">
+                            <i class="fa-solid fa-laptop"></i> Local Server
+                        </button>
+                        <button type="button" class="tab-btn" id="tab-pod" onclick="switchBackend('pod')">
+                            <i class="fa-solid fa-network-wired"></i> RunPod Pod
+                        </button>
+                        <button type="button" class="tab-btn" id="tab-serverless" onclick="switchBackend('serverless')">
+                            <i class="fa-solid fa-cloud-bolt"></i> RunPod Serverless
+                        </button>
+                    </div>
+
+                    <!-- Connection Credentials Form -->
+                    <div class="form-group" id="group-url">
+                        <label for="input-url">Base API URL</label>
+                        <div class="input-with-button">
+                            <input type="text" id="input-url" placeholder="http://localhost:8081" value="http://localhost:8081">
+                            <button type="button" class="btn btn-secondary" id="btn-test-connection" onclick="testConnection()">
+                                Test Connection
+                            </button>
+                        </div>
+                        <span class="input-tip" id="url-tip">The URL where api_server.py is running.</span>
+                    </div>
+
+                    <div class="form-row hidden" id="group-serverless">
+                        <div class="form-group flex-2">
+                            <label for="input-api-key">RunPod API Key</label>
+                            <div class="input-password-wrapper">
+                                <input type="password" id="input-api-key" placeholder="rpa-xxxxxx...">
+                                <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('input-api-key')">
+                                    <i class="fa-solid fa-eye" id="input-api-key-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="input-endpoint-id">Endpoint ID</label>
+                            <input type="text" id="input-endpoint-id" placeholder="endpoint-id">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Image Uploader -->
+                <div class="card glass-card">
+                    <h2 class="card-title"><i class="fa-solid fa-image icon-blue"></i> Source Image</h2>
+                    
+                    <div class="drop-zone" id="image-drop-zone">
+                        <div class="drop-zone-prompt">
+                            <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                            <p class="drop-title">Drag & drop your image here</p>
+                            <p class="drop-subtitle">or click to browse from files</p>
+                            <span class="file-limits">Supports PNG, JPG, JPEG (Max 10MB)</span>
+                        </div>
+                        <input type="file" id="input-file" accept="image/*" class="file-input">
+                        <div class="preview-container hidden" id="image-preview-container">
+                            <img id="image-preview" src="" alt="Source preview">
+                            <button type="button" class="btn-remove-image" id="btn-remove-image" onclick="clearImage(event)">
+                                <i class="fa-solid fa-trash-can"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                    <div class="upload-samples">
+                        <span>Or try the Hunyuan3D demo image:</span>
+                        <div class="sample-images">
+                            <img src="assets/demo.png" alt="Demo Toy" class="sample-thumb" onclick="loadSampleImage('assets/demo.png')">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Parameters Configuration -->
+                <div class="card glass-card">
+                    <div class="card-header-toggle">
+                        <h2 class="card-title"><i class="fa-solid fa-sliders icon-pink"></i> Generation Parameters</h2>
+                        <div class="mode-selector">
+                            <button type="button" class="btn-toggle active" id="btn-mode-form" onclick="toggleParametersMode('form')">Form</button>
+                            <button type="button" class="btn-toggle" id="btn-mode-json" onclick="toggleParametersMode('json')">JSON Payload</button>
+                        </div>
+                    </div>
+
+                    <!-- Param Form Fields -->
+                    <div id="params-form-container">
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="param-remove-bg" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span>Remove BG</span>
+                                </label>
+                                <span class="field-desc">Remove image background automatically</span>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="param-texture" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span>Generate Textures</span>
+                                </label>
+                                <span class="field-desc">Generate textures for the 3D model</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label for="param-steps">Inference Steps (1-50)</label>
+                                <div class="slider-container">
+                                    <input type="range" id="param-steps" min="1" max="50" value="5" oninput="updateSliderVal('steps', this.value)">
+                                    <span class="slider-value" id="val-steps">5</span>
+                                </div>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label for="param-guidance">Guidance Scale (1.0-20.0)</label>
+                                <div class="slider-container">
+                                    <input type="range" id="param-guidance" min="1" max="20" step="0.5" value="5.0" oninput="updateSliderVal('guidance', this.value)">
+                                    <span class="slider-value" id="val-guidance">5.0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label for="param-seed">Seed</label>
+                                <div class="input-with-button">
+                                    <input type="number" id="param-seed" value="1234" min="0" max="4294967295">
+                                    <button type="button" class="btn btn-secondary" onclick="randomizeSeed()">
+                                        <i class="fa-solid fa-dice"></i> Rand
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label for="param-resolution">Resolution (Octree)</label>
+                                <select id="param-resolution">
+                                    <option value="128">128 (Faster)</option>
+                                    <option value="256" selected>256 (Default)</option>
+                                    <option value="512">512 (HQ)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label for="param-format">Output Format</label>
+                                <select id="param-format">
+                                    <option value="glb" selected>GLB (Recommended)</option>
+                                    <option value="obj">OBJ</option>
+                                </select>
+                            </div>
+                            <div class="form-group flex-1" id="group-request-type">
+                                <label for="param-request-type">Request Processing</label>
+                                <select id="param-request-type">
+                                    <option value="async" selected>Asynchronous (Polled)</option>
+                                    <option value="sync">Synchronous (Direct wait)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- JSON Editor (Hidden by default) -->
+                    <div id="params-json-container" class="hidden">
+                        <label for="json-payload-editor">Raw JSON Payload Editor</label>
+                        <textarea id="json-payload-editor" rows="12" class="json-textarea"></textarea>
+                        <span class="input-tip">Modifying fields here overrides form values. Ensure it stays valid JSON.</span>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-primary btn-large btn-glow" id="btn-generate" onclick="startGeneration()">
+                            <i class="fa-solid fa-magic-wand-sparkles"></i> Generate 3D Model
+                        </button>
+                        <button type="button" class="btn btn-danger btn-large hidden" id="btn-cancel" onclick="cancelGeneration()">
+                            <i class="fa-solid fa-ban"></i> Cancel Job
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Viewport and Console Logs -->
+            <section class="panel-right">
+                <!-- Card 4: 3D Viewer -->
+                <div class="card glass-card viewer-card">
+                    <div class="viewer-header">
+                        <h2 class="card-title"><i class="fa-solid fa-shapes icon-green"></i> 3D Render Viewport</h2>
+                        <div class="viewer-actions">
+                            <button type="button" class="btn btn-secondary btn-icon" id="btn-download" disabled onclick="downloadGeneratedModel()" title="Download Model">
+                                <i class="fa-solid fa-download"></i> Download
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="viewport-container" id="viewport-container">
+                        <!-- Model Viewer Element -->
+                        <div class="model-viewer-wrapper" id="model-viewer-wrapper">
+                            <div class="no-model-placeholder" id="viewer-placeholder">
+                                <i class="fa-solid fa-cube placeholder-cube animate-float"></i>
+                                <p>No 3D model loaded</p>
+                                <span>Upload an image and hit Generate to see the result</span>
+                            </div>
+                            
+                            <!-- Dynamically loaded <model-viewer> -->
+                        </div>
+
+                        <!-- Progress Overlay -->
+                        <div class="progress-overlay hidden" id="progress-overlay">
+                            <div class="spinner-container">
+                                <div class="glow-spinner"></div>
+                                <i class="fa-solid fa-cube center-cube"></i>
+                            </div>
+                            <p class="progress-status" id="progress-status-text">Uploading assets...</p>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="progress-bar-fill" style="width: 10%;"></div>
+                            </div>
+                            <span class="progress-time" id="progress-time-counter">0.0s elapsed</span>
+                        </div>
+                    </div>
+
+                    <!-- Viewer Controls Bar -->
+                    <div class="viewer-controls" id="viewer-controls">
+                        <div class="control-toggle-group">
+                            <button type="button" class="control-btn checked" id="btn-view-texture" onclick="toggleViewerTexture(true)" disabled>
+                                <i class="fa-solid fa-paintbrush"></i> Appearance
+                            </button>
+                            <button type="button" class="control-btn" id="btn-view-geometry" onclick="toggleViewerTexture(false)" disabled>
+                                <i class="fa-solid fa-draw-polygon"></i> Geometry
+                            </button>
+                        </div>
+                        <div class="control-separator"></div>
+                        <button type="button" class="control-btn checked" id="btn-toggle-rotate" onclick="toggleViewerAutoRotate()" disabled title="Auto Rotate">
+                            <i class="fa-solid fa-arrows-spin"></i> Rotate
+                        </button>
+                        <button type="button" class="control-btn checked" id="btn-toggle-grid" onclick="toggleViewerGrid()" disabled title="Toggle Grid & Shadows">
+                            <i class="fa-solid fa-border-none"></i> Grid
+                        </button>
+                        <button type="button" class="control-btn" id="btn-reset-camera" onclick="resetViewerCamera()" disabled title="Reset Camera">
+                            <i class="fa-solid fa-camera-rotate"></i> Recenter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 5: Console Logs -->
+                <div class="card glass-card console-card">
+                    <div class="console-header">
+                        <h2 class="card-title"><i class="fa-solid fa-terminal icon-yellow"></i> Execution Console</h2>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="clearConsole()">
+                            <i class="fa-solid fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                    <div class="console-log-viewport" id="console-logs">
+                        <div class="console-line system-line">[System] Console initialized. Ready to test Hunyuan3D instances...</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Script loading -->
+    <script src="app.js"></script>
+</body>
+</html>
